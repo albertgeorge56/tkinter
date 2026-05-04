@@ -1,0 +1,22 @@
+            **Welcome Customer**             
+
+Bill Number: 30260504232803
+Customer Name: kjhkh
+Customer Phone No.: 687687
+=============================================
+Product         Quantity       Price
+=============================================
+Bath Soap       1                 20
+Face Cream      1                 50
+Rice            1                 30
+Oil             1                120
+Maaza           1                 30
+Pepsi           1                 30
+---------------------------------------------
+Cosmetic Tax                      8.40
+Grocery Tax                      18.00
+Cold Drink Tax                    4.80
+---------------------------------------------
+Total Bill                      221.20
+---------------------------------------------
+

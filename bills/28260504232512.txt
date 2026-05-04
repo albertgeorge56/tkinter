@@ -1,0 +1,22 @@
+            **Welcome Customer**             
+
+Bill Number: 28260504232512
+Customer Name: ALBERT
+Customer Phone No.: 9993838339
+=============================================
+Product         Quantity       Price
+=============================================
+Bath Soap       1                 20
+Face Cream      9                450
+Rice            9                270
+Oil             9               1080
+Maaza           9                270
+Pepsi           9                270
+---------------------------------------------
+Cosmetic Tax                     56.40
+Grocery Tax                     162.00
+Cold Drink Tax                   43.20
+---------------------------------------------
+Total Bill                  1811.6000000000001
+---------------------------------------------
+
