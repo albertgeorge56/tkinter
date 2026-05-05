@@ -5,6 +5,7 @@ from email.mime.text import MIMEText
 import os
 import random
 import smtplib
+import sys
 import tempfile
 import threading
 import time
@@ -15,8 +16,23 @@ from ttkbootstrap.dialogs import Messagebox
 from ttkbootstrap.widgets.scrolled import ScrolledFrame, ScrolledText
 from ttkbootstrap.widgets import ToastNotification
 
-if not os.path.exists('bills'):
-    os.mkdir('bills') 
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
+def get_data_dir():
+    base_dir = os.path.join(os.getenv("APPDATA"), "RetailBillingApp")
+    bills_dir = os.path.join(base_dir, "bills")
+    os.makedirs(bills_dir, exist_ok=True)
+    return bills_dir
+
+BILLS_DIR = get_data_dir()
+
+# if not os.path.exists('bills'):
+#     os.mkdir('bills') 
 
 mailWindow: Optional[ttk.Toplevel] = None
 def send_email():
@@ -96,9 +112,9 @@ def saveBill(billnumber):
   result = Messagebox.yesno(message='Do you want to save this bill?',title='Confirm')
   if result:
     bill_content = billTextArea.get('1.0',END)
-    with open(f'bills/{billnumber}.txt','w') as f:
+    with open(os.path.join(BILLS_DIR, f"{billnumber}.txt"), 'w') as f:
         f.write(bill_content)
-    billnumberEntry['values'] = [i.split('.')[0] for i in os.listdir('bills/')]
+    billnumberEntry['values'] = [i.split('.')[0] for i in os.listdir(BILLS_DIR)]
     show_success_toast('Bill saved!')
     
 
@@ -144,7 +160,7 @@ def total():
     colddrinkTax = totalColdDrinkPrice * 0.08
     coldDrinkTaxEntry.delete(0, END)
     coldDrinkTaxEntry.insert(0, f'{colddrinkTax:.2f}')
-    totalBill = totalcosmeticPrice+totalColdDrinkPrice+totalColdDrinkPrice+groceryTax+cosmeticTax+colddrinkTax
+    totalBill = totalcosmeticPrice+totalGroceryPrice+totalColdDrinkPrice+groceryTax+cosmeticTax+colddrinkTax
     show_success_toast('Successfully added!')
 
 def get_bill_number():
@@ -191,16 +207,14 @@ def print_bill():
         except Exception as e:
             show_error_toast(f'Printing failed! {e}')
 
-
 def search_bill():
     if not billnumberEntry.get() == '':
         try:
-            with open(f'bills/{billnumberEntry.get()}.txt','r') as f:
+            with open(os.path.join(BILLS_DIR, f"{billnumberEntry.get()}.txt"), 'r') as f:
                     billTextArea.delete('1.0', END)
                     billTextArea.insert('1.0',f.read())
         except:
             show_error_toast('Bill not found')
-
 
 def bill_area():
     if nameEntry.get() == '' or phoneEntry.get() == '':
@@ -297,20 +311,18 @@ def show_error_toast(message, parent=root):
     )
     toast.show_toast()
 
-
-
 root.title('Retail Billing Software')
 validate_cmd = root.register(only_numbers)
 
 main_scrolled_frame = ScrolledFrame(root, autohide=True)
 main_scrolled_frame.pack(fill=BOTH, expand=YES)
 
-root.iconbitmap('assets/icon.ico')
+root.iconbitmap(resource_path('assets/icon.ico'))
 style = ttk.Style()
 style.configure('.', font=("Helvetica", 11))
-img = ttk.PhotoImage(file='assets/img1.png')
+img = ttk.PhotoImage(file=resource_path('assets/img1.png'))
 ttk.Label(main_scrolled_frame, text='Retail Billing Software'.upper(), image=img, bootstyle='dark-inverse', \
-           anchor='center', padding=20, font=("",14), compound='left').pack(fill='x')
+           anchor='center', padding=4, font=("",14), compound='left').pack(fill='x')
 
 customer_details_frame = ttk.Labelframe(main_scrolled_frame, text='Customer Details', padding=20)
 customer_details_frame.pack(fill='x', padx=20, pady=10)
@@ -328,7 +340,7 @@ customer_details_frame.columnconfigure(3, weight=1)
 phoneEntry.grid(row=0, column=3, padx=10, sticky='ew')
 
 billnumberLabel = ttk.Label(customer_details_frame, text='Bill Number')
-all_bill_numbers = [i.split('.')[0] for i in os.listdir('bills/')]
+all_bill_numbers = [i.split('.')[0] for i in os.listdir(BILLS_DIR)]
 billnumberEntry = ttk.Combobox(
     customer_details_frame, 
     values=all_bill_numbers, 
@@ -342,7 +354,7 @@ billnumberEntry.grid(row=0, column=5, padx=10, sticky='e')
 searchBtn = ttk.Button(customer_details_frame, text='Search', bootstyle=PRIMARY, command=search_bill)
 searchBtn.grid(row=0, column=6, padx=10)
 
-productsFrame = ttk.Frame(main_scrolled_frame, padding=20)
+productsFrame = ttk.Frame(main_scrolled_frame, padding=6)
 productsFrame.pack(fill='x')
 productsFrame.columnconfigure(0,weight=1, uniform='productframe')
 productsFrame.columnconfigure(1,weight=1, uniform='productframe')
@@ -485,8 +497,8 @@ billTextArea.pack()
 # scrollbar.config(command=textarea.yview)
 # textarea.config(yscrollcommand=scrollbar.set)
 
-billmenuFrame = ttk.Labelframe(main_scrolled_frame, text='Bill Menu', padding=20)
-billmenuFrame.pack(fill='x', padx=20, pady=10)
+billmenuFrame = ttk.Labelframe(main_scrolled_frame, text='Bill Menu', padding=10)
+billmenuFrame.pack(fill='x', padx=20, pady=6)
 
 cosmeticPriceLabel = ttk.Label(billmenuFrame, text='Cosmetic Price')
 cosmeticPriceEntry = ttk.Entry(billmenuFrame, validate='key', validatecommand=(validate_cmd,'%P'))
@@ -524,19 +536,19 @@ billButtonFrame.grid(row=0, column=4, rowspan=3, sticky='nesw')
 billButtonFrame.columnconfigure((0, 1, 2, 3, 4), weight=1)
 billButtonFrame.rowconfigure(0, weight=1)
 
-totalButton = ttk.Button(billButtonFrame, text='Total', bootstyle=DANGER, padding=(40, 20), command=total)
-totalButton.grid(row=0, column=0, padx=20, sticky='ew')
+totalButton = ttk.Button(billButtonFrame, text='Total', bootstyle=DANGER, width=10, command=total)
+totalButton.grid(row=0, column=0, padx=20, sticky='ew', ipady=8)
 
-billButton = ttk.Button(billButtonFrame, text='Bill', bootstyle=DANGER, padding=(40, 20), command=bill_area)
-billButton.grid(row=0, column=1, padx=20, sticky='ew')
+billButton = ttk.Button(billButtonFrame, text='Bill', bootstyle=DANGER, width=10, command=bill_area)
+billButton.grid(row=0, column=1, padx=20, sticky='ew', ipady=8)
 
-emailButton = ttk.Button(billButtonFrame, text='Email', bootstyle=DANGER, padding=(40, 20), command=send_email)
-emailButton.grid(row=0, column=2, padx=20, sticky='ew')
+emailButton = ttk.Button(billButtonFrame, text='Email', bootstyle=DANGER, width=10, command=send_email)
+emailButton.grid(row=0, column=2, padx=20, sticky='ew', ipady=8)
 
-printButton = ttk.Button(billButtonFrame, text='Print', bootstyle=DANGER, padding=(40, 20), command=print_bill)
-printButton.grid(row=0, column=3, padx=20, sticky='ew')
+printButton = ttk.Button(billButtonFrame, text='Print', bootstyle=DANGER, width=10, command=print_bill)
+printButton.grid(row=0, column=3, padx=20, sticky='ew', ipady=8)
 
-clearButton = ttk.Button(billButtonFrame, text='Clear', bootstyle=DANGER, padding=(40, 20))
-clearButton.grid(row=0, column=4, padx=20, sticky='ew')
+clearButton = ttk.Button(billButtonFrame, text='Clear', bootstyle=DANGER, width=10)
+clearButton.grid(row=0, column=4, padx=20, sticky='ew', ipady=8)
 
 root.mainloop()
